@@ -91,6 +91,22 @@ public:
         return lines * lineHeight;
     }
 
+    // Background rect height: like measureTextHeight, but the last line uses the
+    // full glyph cell so pixels below the baseline / descenders stay filled when
+    // lineHeight < font->height.
+    static int measureTextBackgroundHeight(const BitmapFont* font, const String& text,
+                                           int maxWidth, int lineHeight, uint8_t scale = 1) {
+        if (!font) font = &font_tiny5;
+        if (scale < 1) scale = 1;
+        int h = measureTextHeight(font, text, maxWidth, lineHeight, scale);
+        if (h <= 0) return h;
+        const int glyphH = (int)font->height * scale;
+        if (glyphH > lineHeight) {
+            h = h - lineHeight + glyphH;
+        }
+        return h;
+    }
+
     static void drawText(WS2812FX& strip, const BitmapFont* font, const String& text,
                          int startX, int startY, int maxWidth, int lineHeight,
                          TextAlignment align, uint32_t color, uint8_t scale = 1) {

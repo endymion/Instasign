@@ -14,16 +14,16 @@ class ErrorScene : public Scene {
     uint32_t messageColor = RGBW32(255, 200, 200, 0); // Light red
 
     int titlePaddingTop = 0;
-    int titlePaddingBottom = 2;
+    int titlePaddingBottom = 0; // HR + body sit 2px closer to title than before
     int separatorHeight = 1;
-    int messagePaddingTop = 2;
+    int messagePaddingTop = 0;
     int messagePaddingSides = 1;
     int lineHeight = 0;
     int titleLineHeight = 0;
-    int messageLineHeight = 0;
+    int messageLineHeight = 10; // tighter than Pixelify 11 default (12)
 
     const BitmapFont* titleFont = &font_pixelify11;
-    const BitmapFont* messageFont = &font_bytesized;
+    const BitmapFont* messageFont = &font_pixelify11;
     uint8_t titleScale = 1;
     uint8_t messageScale = 1;
 
@@ -147,7 +147,7 @@ class ErrorScene : public Scene {
       cursorY += messagePaddingTop;
 
       int maxMessageWidth = 64 - (messagePaddingSides * 2);
-      int messageHeight = Typography::measureTextHeight(messageFont, message, maxMessageWidth, messageLH, messageScale);
+      int messageHeight = Typography::measureTextBackgroundHeight(messageFont, message, maxMessageWidth, messageLH, messageScale);
 
       if (messageBackgroundColor != backgroundColor) {
         fillRect(strip, 0, cursorY, 64, messageHeight, messageBackgroundColor);
@@ -171,7 +171,7 @@ class ErrorScene : public Scene {
       if (params.containsKey("titleLineHeight")) titleLineHeight = params["titleLineHeight"].as<int>();
       if (params.containsKey("messageLineHeight")) messageLineHeight = params["messageLineHeight"].as<int>();
 
-      // Defaults stay Jersey 10 / bytesized unless explicitly overridden.
+      // Defaults stay Pixelify 11 for title + message unless explicitly overridden.
       if (params.containsKey("font")) {
         const BitmapFont* font = findFontByName(params["font"].as<String>());
         titleFont = font;

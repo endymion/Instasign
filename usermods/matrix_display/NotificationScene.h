@@ -14,7 +14,7 @@ class NotificationScene : public Scene {
 
     // Layout Parameters
     int titlePaddingTop = 0;
-    int titlePaddingBottom = 2;
+    int titlePaddingBottom = 0; // HR + body sit 2px closer to title than before
     int separatorHeight = 1;
     int messagePaddingTop = 2;
     int messagePaddingSides = 1;
@@ -150,7 +150,7 @@ class NotificationScene : public Scene {
       cursorY += messagePaddingTop;
 
       int maxMessageWidth = 64 - (messagePaddingSides * 2);
-      int messageHeight = Typography::measureTextHeight(messageFont, message, maxMessageWidth, messageLH, messageScale);
+      int messageHeight = Typography::measureTextBackgroundHeight(messageFont, message, maxMessageWidth, messageLH, messageScale);
 
       if (messageBackgroundColor != backgroundColor) {
         fillRect(strip, 0, cursorY, 64, messageHeight, messageBackgroundColor);
