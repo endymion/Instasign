@@ -1,0 +1,16 @@
+#pragma once
+#include "../../IconTypes.h"
+
+// Lucide 'sun' @ 10px
+static const uint8_t icon_sun_10_bits[20] PROGMEM = {
+  0x30, 0x00, 0xb6, 0x01, 0x86, 0x01, 0x78, 0x00, 0x7b, 0x03, 0x7b, 0x03, 0x78, 0x00, 0x86, 0x01, 0xb6, 0x01, 0x30, 0x00
+};
+
+static const BitmapIcon icon_sun_10 = {
+  "sun",
+  10, /* size */
+  10, /* width */
+  10, /* height */
+  2, /* bytesPerColumn */
+  icon_sun_10_bits
+};

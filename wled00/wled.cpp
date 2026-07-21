@@ -514,6 +514,13 @@ void WLED::setup()
     }
   }
   DEBUG_PRINTLN(F("Reading config"));
+  if (!WLED_FS.exists("/cfg.json")) {
+    File f = WLED_FS.open("/cfg.json", "w");
+    if (f) {
+      f.print(F("{\"hw\":{\"led\":{\"total\":4096,\"ins\":[{\"start\":0,\"len\":4096,\"pin\":[64,64,1,1,1],\"order\":0,\"type\":65}]}},\"matrix\":{\"panels\":[{\"b\":0,\"r\":0,\"w\":64,\"h\":64,\"s\":0,\"x\":0,\"y\":0}]}}"));
+      f.close();
+    }
+  }
   bool needsCfgSave = deserializeConfigFromFS();
   DEBUG_PRINTF_P(PSTR("heap %u\n"), getFreeHeapSize());
 

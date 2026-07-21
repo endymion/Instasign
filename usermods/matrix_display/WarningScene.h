@@ -1,0 +1,270 @@
+#pragma once
+#include "Scene.h"
+#include "Typography.h"
+#include "Animation.h"
+#include "FontRegistry.h"
+#include "Icons.h"
+
+// Compact alert screen: Jersey 10 title + 10px Lucide icon, amber palette.
+class WarningScene : public Scene {
+  private:
+    String title = "WARNING";
+    String message = "Check the system.";
+    uint32_t titleColor = RGBW32(255, 180, 0, 0);   // Amber
+    uint32_t messageColor = RGBW32(255, 220, 160, 0); // Warm white
+
+    int titlePaddingTop = 0;
+    int titlePaddingBottom = 2;
+    int separatorHeight = 1;
+    int messagePaddingTop = 2;
+    int messagePaddingSides = 1;
+    int lineHeight = 0;
+    int titleLineHeight = 0;
+    int messageLineHeight = 0;
+
+    const BitmapFont* titleFont = &font_pixelify11;
+    const BitmapFont* messageFont = &font_bytesized;
+    uint8_t titleScale = 1;
+    uint8_t messageScale = 1;
+
+    const BitmapIcon* icon = nullptr;
+    uint8_t iconSize = 10;
+    int iconPadding = 2;
+    uint32_t iconColor = RGBW32(255, 180, 0, 0);
+
+    uint32_t backgroundColor = RGBW32(0, 0, 0, 0);
+    uint32_t titleBackgroundColor = RGBW32(0, 0, 0, 0);
+    uint32_t messageBackgroundColor = RGBW32(28, 16, 0, 0); // Warm dark
+
+    uint32_t separatorBrightColor = RGBW32(255, 140, 0, 0);
+    uint32_t separatorDimColor = RGBW32(60, 30, 0, 0);
+    unsigned long separatorAnimStart = 0;
+    unsigned long separatorAnimDuration = 0;
+
+    static uint32_t colorFromJson(JsonArray c, uint32_t fallback) {
+      if (c.size() >= 3) return RGBW32(c[0], c[1], c[2], 0);
+      return fallback;
+    }
+
+    int effectiveTitleLineHeight() const {
+      if (titleLineHeight > 0) return titleLineHeight;
+      if (lineHeight > 0) return lineHeight;
+      return Typography::scaledLineHeight(titleFont, titleScale);
+    }
+
+    int effectiveMessageLineHeight() const {
+      if (messageLineHeight > 0) return messageLineHeight;
+      if (lineHeight > 0) return lineHeight;
+      return Typography::scaledLineHeight(messageFont, messageScale);
+    }
+
+    void fillRect(WS2812FX& strip, int x, int y, int w, int h, uint32_t color) {
+      for (int i = 0; i < w; i++) {
+        for (int j = 0; j < h; j++) {
+          if (x + i >= 0 && x + i < 64 && y + j >= 0 && y + j < 64) {
+            strip.setPixelColor((unsigned)((y + j) * 64 + (x + i)), color);
+          }
+        }
+      }
+    }
+
+    void drawSeparatorProgress(WS2812FX& strip, int y, const SceneTime& time) {
+      if (separatorHeight <= 0) return;
+
+      float progress = animationProgress(time, separatorAnimStart, separatorAnimDuration);
+      int wipeX = (int)(progress * 64.0f + 0.5f);
+      if (wipeX < 0) wipeX = 0;
+      if (wipeX > 64) wipeX = 64;
+
+      if (wipeX > 0) {
+        fillRect(strip, 0, y, wipeX, separatorHeight, separatorDimColor);
+      }
+      if (wipeX < 64) {
+        fillRect(strip, wipeX, y, 64 - wipeX, separatorHeight, separatorBrightColor);
+      }
+    }
+
+  public:
+    WarningScene() {
+      icon = findIcon("alert-triangle", iconSize);
+    }
+
+    void draw(WS2812FX& strip, const SceneTime& time) override {
+      for (unsigned i = 0; i < 4096; i++) {
+        strip.setPixelColor(i, backgroundColor);
+      }
+
+      const int titleLH = effectiveTitleLineHeight();
+      const int messageLH = effectiveMessageLineHeight();
+      int cursorY = titlePaddingTop;
+
+      const int iconW = icon ? icon->width : 0;
+      const int iconH = icon ? icon->height : 0;
+      const int titleX = icon ? (1 + iconW + iconPadding) : 0;
+      const int titleMaxW = 64 - titleX;
+      const int titleInkH = title.length()
+        ? Typography::measureBlockInkHeight(titleFont, title, titleMaxW, titleLH, titleScale)
+        : 0;
+      const int headerH = titleInkH > iconH ? titleInkH : iconH;
+
+      if (headerH > 0 && titleBackgroundColor != backgroundColor) {
+        fillRect(strip, 0, cursorY, 64, headerH, titleBackgroundColor);
+      }
+
+      int titleY = cursorY;
+      if (title.length() && titleMaxW > 0) {
+        titleY = cursorY + (headerH - titleInkH) / 2;
+        if (titleY < cursorY) titleY = cursorY;
+      }
+
+      if (icon) {
+        int iconY = cursorY + (headerH - iconH) / 2;
+        if (title.length()) {
+          const int inkTop = Typography::measureInkTop(titleFont, title, titleScale);
+          const int inkBottom = Typography::measureInkHeight(titleFont, title, titleScale);
+          if (inkBottom > inkTop) {
+            iconY = titleY + (inkTop + inkBottom - iconH) / 2;
+          }
+        }
+        if (iconY < cursorY) iconY = cursorY;
+        Icons::drawIcon(strip, icon, 1, iconY, iconColor);
+      }
+
+      if (title.length() && titleMaxW > 0) {
+        Typography::drawText(strip, titleFont, title, titleX, titleY, titleMaxW, titleLH,
+                             ALIGN_CENTER, titleColor, titleScale);
+      }
+
+      if (headerH > 0) {
+        cursorY += headerH + titlePaddingBottom;
+      }
+
+      if (separatorHeight > 0) {
+        drawSeparatorProgress(strip, cursorY, time);
+        cursorY += separatorHeight;
+      }
+
+      cursorY += messagePaddingTop;
+
+      int maxMessageWidth = 64 - (messagePaddingSides * 2);
+      int messageHeight = Typography::measureTextHeight(messageFont, message, maxMessageWidth, messageLH, messageScale);
+
+      if (messageBackgroundColor != backgroundColor) {
+        fillRect(strip, 0, cursorY, 64, messageHeight, messageBackgroundColor);
+      }
+
+      Typography::drawText(strip, messageFont, message, messagePaddingSides, cursorY,
+                           maxMessageWidth, messageLH, ALIGN_LEFT, messageColor, messageScale);
+    }
+
+    void updateParams(JsonObject params) override {
+      if (params.containsKey("title")) title = params["title"].as<String>();
+      if (params.containsKey("message")) message = params["message"].as<String>();
+
+      if (params.containsKey("titlePaddingTop")) titlePaddingTop = params["titlePaddingTop"].as<int>();
+      if (params.containsKey("titlePaddingBottom")) titlePaddingBottom = params["titlePaddingBottom"].as<int>();
+      if (params.containsKey("messagePaddingTop")) messagePaddingTop = params["messagePaddingTop"].as<int>();
+      if (params.containsKey("messagePaddingSides")) messagePaddingSides = params["messagePaddingSides"].as<int>();
+      if (params.containsKey("separatorHeight")) separatorHeight = params["separatorHeight"].as<int>();
+
+      if (params.containsKey("lineHeight")) lineHeight = params["lineHeight"].as<int>();
+      if (params.containsKey("titleLineHeight")) titleLineHeight = params["titleLineHeight"].as<int>();
+      if (params.containsKey("messageLineHeight")) messageLineHeight = params["messageLineHeight"].as<int>();
+
+      // Defaults stay Jersey 10 / bytesized unless explicitly overridden.
+      if (params.containsKey("font")) {
+        const BitmapFont* font = findFontByName(params["font"].as<String>());
+        titleFont = font;
+        messageFont = font;
+      }
+      if (params.containsKey("titleFont")) {
+        titleFont = findFontByName(params["titleFont"].as<String>());
+      }
+      if (params.containsKey("messageFont")) {
+        messageFont = findFontByName(params["messageFont"].as<String>());
+      }
+
+      if (params.containsKey("scale")) {
+        uint8_t s = params["scale"].as<uint8_t>();
+        if (s < 1) s = 1;
+        titleScale = s;
+        messageScale = s;
+      }
+      if (params.containsKey("titleScale")) {
+        uint8_t s = params["titleScale"].as<uint8_t>();
+        titleScale = s < 1 ? 1 : s;
+      }
+      if (params.containsKey("messageScale")) {
+        uint8_t s = params["messageScale"].as<uint8_t>();
+        messageScale = s < 1 ? 1 : s;
+      }
+
+      if (params.containsKey("iconSize")) {
+        iconSize = params["iconSize"].as<uint8_t>();
+      }
+      if (params.containsKey("iconPadding")) {
+        iconPadding = params["iconPadding"].as<int>();
+      }
+      if (params.containsKey("iconColor")) {
+        iconColor = colorFromJson(params["iconColor"].as<JsonArray>(), iconColor);
+      }
+      if (params.containsKey("icon")) {
+        String iconName = params["icon"].as<String>();
+        if (iconName.length() == 0) {
+          icon = nullptr;
+        } else {
+          icon = findIcon(iconName, iconSize);
+        }
+      } else if (params.containsKey("iconSize")) {
+        // Keep warning icon family; re-resolve at new size.
+        const char* name = icon ? icon->name : "alert-triangle";
+        icon = findIcon(name, iconSize);
+      }
+
+      if (params.containsKey("titleColor")) {
+        titleColor = colorFromJson(params["titleColor"].as<JsonArray>(), titleColor);
+      }
+      if (params.containsKey("messageColor")) {
+        messageColor = colorFromJson(params["messageColor"].as<JsonArray>(), messageColor);
+      }
+      if (params.containsKey("messageBackgroundColor")) {
+        messageBackgroundColor = colorFromJson(params["messageBackgroundColor"].as<JsonArray>(), messageBackgroundColor);
+      }
+      if (params.containsKey("titleBackgroundColor")) {
+        titleBackgroundColor = colorFromJson(params["titleBackgroundColor"].as<JsonArray>(), titleBackgroundColor);
+      }
+      if (params.containsKey("backgroundColor")) {
+        backgroundColor = colorFromJson(params["backgroundColor"].as<JsonArray>(), backgroundColor);
+      }
+
+      if (params.containsKey("separatorBrightColor")) {
+        separatorBrightColor = colorFromJson(params["separatorBrightColor"].as<JsonArray>(), separatorBrightColor);
+      }
+      if (params.containsKey("separatorDimColor")) {
+        separatorDimColor = colorFromJson(params["separatorDimColor"].as<JsonArray>(), separatorDimColor);
+      }
+      if (params.containsKey("separatorAnimStart")) {
+        separatorAnimStart = params["separatorAnimStart"].as<unsigned long>();
+      }
+      if (params.containsKey("separatorAnimDuration")) {
+        separatorAnimDuration = params["separatorAnimDuration"].as<unsigned long>();
+      }
+
+      JsonObject sep = params["separator"];
+      if (!sep.isNull()) {
+        if (sep.containsKey("height")) separatorHeight = sep["height"].as<int>();
+        if (sep.containsKey("brightColor")) {
+          separatorBrightColor = colorFromJson(sep["brightColor"].as<JsonArray>(), separatorBrightColor);
+        }
+        if (sep.containsKey("dimColor")) {
+          separatorDimColor = colorFromJson(sep["dimColor"].as<JsonArray>(), separatorDimColor);
+        }
+        if (sep.containsKey("animStart")) {
+          separatorAnimStart = sep["animStart"].as<unsigned long>();
+        }
+        if (sep.containsKey("animDuration")) {
+          separatorAnimDuration = sep["animDuration"].as<unsigned long>();
+        }
+      }
+    }
+};

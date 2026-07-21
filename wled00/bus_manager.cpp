@@ -932,6 +932,13 @@ BusHub75Matrix::BusHub75Matrix(const BusConfig &bc) : Bus(bc.type, bc.start, bc.
                     7, 48, 6, 47, 2,   //  A_PIN,  B_PIN,  C_PIN,  D_PIN,  E_PIN,
                     21, 4, 5 };        // LAT_PIN, OE_PIN,CLK_PIN
 
+  #elif defined(SEENGREAT_RGB_MATRIX_S3_PINOUT)
+  DEBUGBUS_PRINTLN("MatrixPanel_I2S_DMA - Seengreat RGB Matrix S3 pinout");
+  mxconfig.gpio = { 5, 4, 6,         // R1_PIN, G1_PIN, B1_PIN,
+                    15, 7, 17,       // R2_PIN, G2_PIN, B2_PIN,
+                    8, 18, 10, 9, 16, // A_PIN, B_PIN, C_PIN, D_PIN, E_PIN,
+                    11, 13, 12 };    // LAT_PIN, OE_PIN, CLK_PIN
+
   #else
   DEBUGBUS_PRINTLN("MatrixPanel_I2S_DMA - S3 generic pinout");
   // HUB75_I2S_CFG::i2s_pins _pins={R1_PIN, G1_PIN, B1_PIN, R2_PIN, G2_PIN, B2_PIN, A_PIN, B_PIN, C_PIN, D_PIN, E_PIN, LAT_PIN, OE_PIN, CLK_PIN};
@@ -1015,6 +1022,7 @@ BusHub75Matrix::BusHub75Matrix(const BusConfig &bc) : Bus(bc.type, bc.start, bc.
                 mxconfig.gpio.a, mxconfig.gpio.b, mxconfig.gpio.c, mxconfig.gpio.d, mxconfig.gpio.e, mxconfig.gpio.lat, mxconfig.gpio.oe, mxconfig.gpio.clk);
 
   // OK, now we can create our matrix object
+  mxconfig.driver = HUB75_I2S_CFG::FM6126A; // FIX for Seengreat/Waveshare panels showing two thin lines
   display = new(std::nothrow) MatrixPanel_I2S_DMA(mxconfig);
   if (display == nullptr) {
       DEBUGBUS_PRINTLN("****** MatrixPanel_I2S_DMA !KABOOM! driver allocation failed ***********");

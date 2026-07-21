@@ -11,7 +11,7 @@
 #endif
 
 #ifndef DATA_PINS
-  #define DATA_PINS DEFAULT_LED_PIN
+  #define DATA_PINS 64, 64, 1, 64, 64
 #endif
 
 #ifndef LED_TYPES

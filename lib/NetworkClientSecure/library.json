@@ -1,0 +1,8 @@
+{
+  "name": "NetworkClientSecure",
+  "version": "3.3.7",
+  "build": {
+    "libArchive": false,
+    "flags": ["-fno-lto"]
+  }
+}

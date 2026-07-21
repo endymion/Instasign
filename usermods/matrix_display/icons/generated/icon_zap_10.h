@@ -1,0 +1,16 @@
+#pragma once
+#include "../../IconTypes.h"
+
+// Lucide 'zap' @ 10px
+static const uint8_t icon_zap_10_bits[20] PROGMEM = {
+  0x20, 0x00, 0x70, 0x00, 0x78, 0x00, 0x6c, 0x03, 0xff, 0x03, 0xff, 0x03, 0xdb, 0x00, 0x78, 0x00, 0x38, 0x00, 0x10, 0x00
+};
+
+static const BitmapIcon icon_zap_10 = {
+  "zap",
+  10, /* size */
+  10, /* width */
+  10, /* height */
+  2, /* bytesPerColumn */
+  icon_zap_10_bits
+};

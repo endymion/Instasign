@@ -1343,8 +1343,8 @@ String generateDeviceFingerprint() {
   fp[0] ^= chip_info.revision | (chip_info.model << 16);
 #endif
 
-#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S3
-  // mix in ADC calibration data - legacy adc calibration API is not supported on new MCUs (-C5, -C6, -C61, -P4)
+#if (CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S3) && ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(5, 0, 0)
+  // mix in ADC calibration data - legacy adc calibration API is not supported on new MCUs (-C5, -C6, -C61, -P4) or IDF 5.0+
   esp_adc_cal_characteristics_t ch;
   #if (SOC_ADC_MAX_BITWIDTH == 13) || (CONFIG_SOC_ADC_RTC_MAX_BITWIDTH == 13) // S2 has 13 bit ADC
   constexpr auto myBIT_WIDTH = ADC_WIDTH_BIT_13;
