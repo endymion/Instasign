@@ -5,13 +5,13 @@
 #include "FontRegistry.h"
 #include "Icons.h"
 
-// Compact alert screen: Pixelify title + 10px Lucide alert-circle, amber palette.
-class WarningScene : public Scene {
+// Compact alert screen: Pixelify title + 10px Lucide icon, red palette.
+class ErrorScene : public Scene {
   private:
-    String title = "WARNING";
-    String message = "Check the system.";
-    uint32_t titleColor = RGBW32(255, 180, 0, 0);   // Amber
-    uint32_t messageColor = RGBW32(255, 220, 160, 0); // Warm white
+    String title = "ERROR";
+    String message = "Something went wrong.";
+    uint32_t titleColor = RGBW32(255, 70, 70, 0);   // Red
+    uint32_t messageColor = RGBW32(255, 200, 200, 0); // Light red
 
     int titlePaddingTop = 0;
     int titlePaddingBottom = 2;
@@ -30,14 +30,14 @@ class WarningScene : public Scene {
     const BitmapIcon* icon = nullptr;
     uint8_t iconSize = 10;
     int iconPadding = 2;
-    uint32_t iconColor = RGBW32(255, 180, 0, 0);
+    uint32_t iconColor = RGBW32(255, 70, 70, 0);
 
     uint32_t backgroundColor = RGBW32(0, 0, 0, 0);
     uint32_t titleBackgroundColor = RGBW32(0, 0, 0, 0);
-    uint32_t messageBackgroundColor = RGBW32(28, 16, 0, 0); // Warm dark
+    uint32_t messageBackgroundColor = RGBW32(32, 8, 8, 0); // Cool dark red
 
-    uint32_t separatorBrightColor = RGBW32(255, 140, 0, 0);
-    uint32_t separatorDimColor = RGBW32(60, 30, 0, 0);
+    uint32_t separatorBrightColor = RGBW32(255, 50, 50, 0);
+    uint32_t separatorDimColor = RGBW32(60, 12, 12, 0);
     unsigned long separatorAnimStart = 0;
     unsigned long separatorAnimDuration = 0;
 
@@ -85,8 +85,8 @@ class WarningScene : public Scene {
     }
 
   public:
-    WarningScene() {
-      icon = findIcon("alert-circle", iconSize);
+    ErrorScene() {
+      icon = findIcon("alert-octagon", iconSize);
     }
 
     void draw(WS2812FX& strip, const SceneTime& time) override {
@@ -216,8 +216,8 @@ class WarningScene : public Scene {
           icon = findIcon(iconName, iconSize);
         }
       } else if (params.containsKey("iconSize")) {
-        // Keep warning icon family; re-resolve at new size.
-        const char* name = icon ? icon->name : "alert-circle";
+        // Keep error icon family; re-resolve at new size.
+        const char* name = icon ? icon->name : "alert-octagon";
         icon = findIcon(name, iconSize);
       }
 

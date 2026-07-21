@@ -5,6 +5,7 @@
 #include "Scene.h"
 #include "NotificationScene.h"
 #include "WarningScene.h"
+#include "ErrorScene.h"
 #include "DefaultScene.h"
 
 #if __has_include("secrets/mqtt_iot_secrets.h")
@@ -112,13 +113,17 @@ class UsermodMatrixDisplay : public Usermod {
       String type = matrixParams["type"] | "notification";
       Serial.printf("UsermodMatrixDisplay: Scene type = %s\n", type.c_str());
 
-      if (type == "notification" || type == "warning") {
+      if (type == "notification" || type == "warning" || type == "error") {
         if (activeScene != nullptr && activeScene != &defaultScene) {
           delete activeScene;
         }
-        activeScene = (type == "warning")
-          ? static_cast<Scene*>(new WarningScene())
-          : static_cast<Scene*>(new NotificationScene());
+        if (type == "warning") {
+          activeScene = static_cast<Scene*>(new WarningScene());
+        } else if (type == "error") {
+          activeScene = static_cast<Scene*>(new ErrorScene());
+        } else {
+          activeScene = static_cast<Scene*>(new NotificationScene());
+        }
         hasDrawn = false;
         activeScene->updateParams(matrixParams);
 
