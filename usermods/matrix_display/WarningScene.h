@@ -4,8 +4,9 @@
 #include "Animation.h"
 #include "FontRegistry.h"
 #include "Icons.h"
+#include "MatrixCanvas.h"
 
-// Compact alert screen: Pixelify title + 10px Lucide alert-circle, amber palette.
+// Compact alert screen: Pixeloid title + Tiny5 body + Lucide alert-circle, amber palette.
 class WarningScene : public Scene {
   private:
     String title = "WARNING";
@@ -14,16 +15,16 @@ class WarningScene : public Scene {
     uint32_t messageColor = RGBW32(255, 220, 160, 0); // Warm white
 
     int titlePaddingTop = 0;
-    int titlePaddingBottom = 0; // HR + body sit 2px closer to title than before
+    int titlePaddingBottom = 2; // blank rows under icon/title before HR (+ body follows)
     int separatorHeight = 1;
     int messagePaddingTop = 0;
     int messagePaddingSides = 1;
     int lineHeight = 0;
     int titleLineHeight = 0;
-    int messageLineHeight = 10; // tighter than Pixelify 11 default (12)
+    int messageLineHeight = 0; // Tiny5 default line height
 
-    const BitmapFont* titleFont = &font_pixelify11;
-    const BitmapFont* messageFont = &font_pixelify11;
+    const BitmapFont* titleFont = &font_pixeloid;
+    const BitmapFont* messageFont = &font_tiny5;
     uint8_t titleScale = 1;
     uint8_t messageScale = 1;
 
@@ -58,29 +59,19 @@ class WarningScene : public Scene {
       return Typography::scaledLineHeight(messageFont, messageScale);
     }
 
-    void fillRect(WS2812FX& strip, int x, int y, int w, int h, uint32_t color) {
-      for (int i = 0; i < w; i++) {
-        for (int j = 0; j < h; j++) {
-          if (x + i >= 0 && x + i < 64 && y + j >= 0 && y + j < 64) {
-            strip.setPixelColor((unsigned)((y + j) * 64 + (x + i)), color);
-          }
-        }
-      }
-    }
-
-    void drawSeparatorProgress(WS2812FX& strip, int y, const SceneTime& time) {
+    void drawSeparatorProgress(WS2812FX& strip, const MatrixCanvas& canvas, int y, const SceneTime& time) {
       if (separatorHeight <= 0) return;
 
       float progress = animationProgress(time, separatorAnimStart, separatorAnimDuration);
-      int wipeX = (int)(progress * 64.0f + 0.5f);
+      int wipeX = (int)(progress * (float)canvas.w + 0.5f);
       if (wipeX < 0) wipeX = 0;
-      if (wipeX > 64) wipeX = 64;
+      if (wipeX > canvas.w) wipeX = canvas.w;
 
       if (wipeX > 0) {
-        fillRect(strip, 0, y, wipeX, separatorHeight, separatorDimColor);
+        canvas.fillRect(strip, 0, y, wipeX, separatorHeight, separatorDimColor);
       }
-      if (wipeX < 64) {
-        fillRect(strip, wipeX, y, 64 - wipeX, separatorHeight, separatorBrightColor);
+      if (wipeX < canvas.w) {
+        canvas.fillRect(strip, wipeX, y, canvas.w - wipeX, separatorHeight, separatorBrightColor);
       }
     }
 
@@ -90,9 +81,8 @@ class WarningScene : public Scene {
     }
 
     void draw(WS2812FX& strip, const SceneTime& time) override {
-      for (unsigned i = 0; i < 4096; i++) {
-        strip.setPixelColor(i, backgroundColor);
-      }
+      const MatrixCanvas canvas = MatrixCanvas::fromStrip(strip);
+      canvas.clear(strip, backgroundColor);
 
       const int titleLH = effectiveTitleLineHeight();
       const int messageLH = effectiveMessageLineHeight();
@@ -101,14 +91,14 @@ class WarningScene : public Scene {
       const int iconW = icon ? icon->width : 0;
       const int iconH = icon ? icon->height : 0;
       const int titleX = icon ? (1 + iconW + iconPadding) : 0;
-      const int titleMaxW = 64 - titleX;
+      const int titleMaxW = canvas.w - titleX;
       const int titleInkH = title.length()
         ? Typography::measureBlockInkHeight(titleFont, title, titleMaxW, titleLH, titleScale)
         : 0;
       const int headerH = titleInkH > iconH ? titleInkH : iconH;
 
       if (headerH > 0 && titleBackgroundColor != backgroundColor) {
-        fillRect(strip, 0, cursorY, 64, headerH, titleBackgroundColor);
+        canvas.fillRect(strip, 0, cursorY, canvas.w, headerH, titleBackgroundColor);
       }
 
       int titleY = cursorY;
@@ -127,11 +117,11 @@ class WarningScene : public Scene {
           }
         }
         if (iconY < cursorY) iconY = cursorY;
-        Icons::drawIcon(strip, icon, 1, iconY, iconColor);
+        Icons::drawIcon(strip, canvas, icon, 1, iconY, iconColor);
       }
 
       if (title.length() && titleMaxW > 0) {
-        Typography::drawText(strip, titleFont, title, titleX, titleY, titleMaxW, titleLH,
+        Typography::drawText(strip, canvas, titleFont, title, titleX, titleY, titleMaxW, titleLH,
                              ALIGN_CENTER, titleColor, titleScale);
       }
 
@@ -140,20 +130,20 @@ class WarningScene : public Scene {
       }
 
       if (separatorHeight > 0) {
-        drawSeparatorProgress(strip, cursorY, time);
+        drawSeparatorProgress(strip, canvas, cursorY, time);
         cursorY += separatorHeight;
       }
 
       cursorY += messagePaddingTop;
 
-      int maxMessageWidth = 64 - (messagePaddingSides * 2);
+      int maxMessageWidth = canvas.w - (messagePaddingSides * 2);
       int messageHeight = Typography::measureTextBackgroundHeight(messageFont, message, maxMessageWidth, messageLH, messageScale);
 
       if (messageBackgroundColor != backgroundColor) {
-        fillRect(strip, 0, cursorY, 64, messageHeight, messageBackgroundColor);
+        canvas.fillRect(strip, 0, cursorY, canvas.w, messageHeight, messageBackgroundColor);
       }
 
-      Typography::drawText(strip, messageFont, message, messagePaddingSides, cursorY,
+      Typography::drawText(strip, canvas, messageFont, message, messagePaddingSides, cursorY,
                            maxMessageWidth, messageLH, ALIGN_LEFT, messageColor, messageScale);
     }
 
@@ -171,7 +161,7 @@ class WarningScene : public Scene {
       if (params.containsKey("titleLineHeight")) titleLineHeight = params["titleLineHeight"].as<int>();
       if (params.containsKey("messageLineHeight")) messageLineHeight = params["messageLineHeight"].as<int>();
 
-      // Defaults stay Pixelify 11 for title + message unless explicitly overridden.
+      // Defaults stay Pixeloid title / Tiny5 message unless explicitly overridden.
       if (params.containsKey("font")) {
         const BitmapFont* font = findFontByName(params["font"].as<String>());
         titleFont = font;

@@ -8,7 +8,7 @@ This repository is a **fork of [WLED](https://github.com/wled/WLED)**. We keep t
 
 - **Hardware target**: Seengreat HUB75 pin mapping (`SEENGREAT_RGB_MATRIX_S3_PINOUT`), FM6126A panel init, 64×64 first-boot defaults
 - **Build env**: `seengreat_rgb_matrix_s3` in `platformio_override.ini` (PlatformIO + Tasmota Arduino-ESP32)
-- **`usermods/matrix_display`**: scene JSON over MQTT/HTTP, fonts/icons, multi-scene queues
+- **`usermods/matrix_display`**: scene JSON over MQTT/HTTP, fonts/icons, multi-scene queues; layout sized from WLED’s matrix `width`×`height` (so extra panels, e.g. 128×64, only need a panel-map change)
 - **TLS for AWS IoT**: vendored `NetworkClientSecure` + full mbedTLS client libs (`lib/mbedtls_esp32s3/`), because the stock Tasmota framework ships a stub `libmbedtls.a` without usable client/PEM support
 - Core WLED MQTT stays off on this IDF5 path; the usermod owns the MQTT client when IoT secrets are present
 
