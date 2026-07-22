@@ -1,3 +1,40 @@
+# Instasign fork — project tracking lives in a sibling folder
+
+This clone (`fork` remote: `endymion/Instasign`, branch `instasign-seengreat-64x64`) hosts two
+independent usermods as sibling folders under `usermods/`:
+
+- **matrix_display** — 64x64 HUB75 LED matrix + cloud MQTT (Seengreat RGB Matrix HUB75 S3, ESP32-S3).
+  Build/flash: `pio run -e seengreat_rgb_matrix_s3 -t upload`.
+- **online_lookup** — Kennedy Space Center next-launch clock (ESP32-C3).
+  Build/flash: `pio run -e esp32c3dev -t upload`.
+
+Each usermod's own dev/bring-up scripts live under `usermods/<name>/scripts/` (and
+`usermods/matrix_display/infra/` for its AWS CDK MQTT stack).
+
+## Project management with Kanbus (MANDATORY)
+
+**All task tracking for work in this repo lives in a sibling folder, `../WLED-project/`,
+not in this directory.** This clone has no `.kanbus.yml` of its own by design — always run
+`kanbus`/`kbs` commands from `../WLED-project/`.
+
+- **Why**: this repo hosts hardware/usermod work spanning multiple sessions and IDEs
+  (Claude Code, Cursor, others). Kanbus issues are the shared memory that lets a new session
+  pick up where a previous one left off, regardless of which tool is being used.
+- **When**: create or update the relevant Kanbus issue *before* starting work on a usermod
+  change or hardware debugging session; record findings (build failures, hardware test
+  results, root causes) as comments or description updates; close only once the change/fix
+  actually lands and is verified.
+- **How**: `cd ../WLED-project && kanbus <command>` — never hand-edit files under
+  `WLED-project/project/` directly (including with `cat`/`jq`/Read/Edit); use Kanbus
+  commands only. See `../WLED-project/CONTRIBUTING_AGENT.template.md` and
+  `../WLED-project/AGENTS.md` for the full workflow, hierarchy, and status rules.
+- **Existing history**: the epic `kanbus-9989d6` covers the July 2026 reorg that
+  consolidated this fork; hardware bring-up history for matrix_display lives under epic
+  `kanbus-558fc8` (FM6126A driver bug, pinout recovery, etc.) — check these before
+  re-diagnosing an issue that may already be documented.
+
+---
+
 # AGENTS.md — WLED AI Coding Agent & AI Code Review Reference
 
 WLED is C++ firmware for ESP32/ESP8266 microcontrollers controlling addressable LEDs,

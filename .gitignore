@@ -37,6 +37,7 @@ wled-update.sh
 # PlatformIO / ESP-IDF generated sdkconfig fragments
 /sdkconfig.defaults
 /sdkconfig.seengreat_rgb_matrix_s3
+/sdkconfig.seengreat_rgb_matrix_s3_diag
 
 # AWS IoT device credentials (generated; never commit)
 /usermods/matrix_display/secrets/*
