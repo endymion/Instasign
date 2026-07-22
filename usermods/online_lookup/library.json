@@ -1,5 +1,5 @@
 {
-  "name": "OnlineLookup",
+  "name": "online_lookup",
   "version": "1.1.0",
   "description": "Fetches the next Kennedy Space Center launch and displays it on an LED matrix.",
   "keywords": [
