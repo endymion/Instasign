@@ -1,0 +1,21 @@
+[platformio]
+default_envs = esp32c3dev
+
+; Official espressif32 core provides WiFiClientSecure (Tasmota WLED default strips TLS).
+; big_partitions: ~1.8MB app slot so TLS firmware fits on 4MB flash.
+[env:esp32c3dev]
+platform = espressif32@6.13.0
+platform_packages =
+board_build.partitions = ${esp32.big_partitions}
+board_build.flash_mode = dio
+upload_port = /dev/cu.usbmodem101
+monitor_port = /dev/cu.usbmodem101
+custom_usermods = online_lookup
+build_flags =
+  ${common.build_flags}
+  ${esp32c3.build_flags}
+  -D WLED_RELEASE_NAME=\"ESP32-C3\"
+  -D WLED_WATCHDOG_TIMEOUT=0
+  -D LOLIN_WIFI_FIX
+  -D ARDUINO_USB_CDC_ON_BOOT=1
+  -D USERMOD_ONLINE_LOOKUP

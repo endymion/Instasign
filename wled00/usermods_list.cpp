@@ -9,3 +9,6 @@
   UsermodMatrixDisplay usermodMatrixDisplay;
   REGISTER_USERMOD(usermodMatrixDisplay);
 #endif
+
+// online_lookup registers itself via REGISTER_USERMOD in usermods/online_lookup/online_lookup.cpp —
+// no entry needed here; it's compiled in whenever custom_usermods = online_lookup is set.
