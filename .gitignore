@@ -41,3 +41,10 @@ wled-update.sh
 # AWS IoT device credentials (generated; never commit)
 /usermods/matrix_display/secrets/*
 !/usermods/matrix_display/secrets/.gitkeep
+
+# Instasign IoT Core cloud MQTT stack (CDK) — certs/build output, never commit
+/usermods/matrix_display/infra/mqtt/certs/**
+!/usermods/matrix_display/infra/mqtt/certs/.gitkeep
+/usermods/matrix_display/infra/mqtt/cdk.out/
+/usermods/matrix_display/infra/mqtt/dist/
+/usermods/matrix_display/infra/mqtt/node_modules/

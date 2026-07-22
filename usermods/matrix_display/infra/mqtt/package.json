@@ -1,0 +1,26 @@
+{
+  "name": "instasign-mqtt",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "cdk": "cdk",
+    "deploy": "cdk deploy --require-approval never && npm run provision",
+    "provision": "node scripts/provision-certs.mjs",
+    "secrets": "node scripts/generate-firmware-secrets.mjs",
+    "publish-demo": "node scripts/publish-demo.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "aws-cdk": "^2.178.0",
+    "aws-cdk-lib": "^2.178.0",
+    "constructs": "^10.4.2",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.2"
+  },
+  "dependencies": {
+    "@aws-sdk/client-iot": "^3.750.0",
+    "@aws-sdk/client-cloudformation": "^3.750.0"
+  }
+}
