@@ -38,6 +38,8 @@ wled-update.sh
 /sdkconfig.defaults
 /sdkconfig.seengreat_rgb_matrix_s3
 /sdkconfig.seengreat_rgb_matrix_s3_diag
+/sdkconfig.esp32c3dev
+/CMakeLists.txt
 
 # AWS IoT device credentials (generated; never commit)
 /usermods/matrix_display/secrets/*
