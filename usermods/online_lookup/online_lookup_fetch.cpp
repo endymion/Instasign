@@ -92,16 +92,46 @@ bool httpGetOverClient(Client& client, const ParsedUrl& url, String& outBody, in
   }
   outStatus = statusLine.substring(firstSpace + 1, secondSpace).toInt();
 
-  // Skip headers up to the blank line.
+  // Skip headers up to the blank line, noting chunked transfer-encoding.
+  bool chunked = false;
   while (client.connected() || client.available()) {
     String line = client.readStringUntil('\n');
     if (line.length() <= 1) break; // just "\r"
+    String lower = line;
+    lower.toLowerCase();
+    if (lower.startsWith("transfer-encoding:") && lower.indexOf("chunked") >= 0) {
+      chunked = true;
+    }
   }
 
   outBody = "";
-  while (client.connected() || client.available()) {
-    while (client.available()) {
-      outBody += (char)client.read();
+  if (chunked) {
+    // Chunked transfer encoding: each chunk is "<hex size>\r\n<data>\r\n",
+    // terminated by a zero-size chunk.
+    while (client.connected() || client.available()) {
+      String sizeLine = client.readStringUntil('\n');
+      sizeLine.trim();
+      int semi = sizeLine.indexOf(';'); // chunk extensions, if any
+      if (semi >= 0) sizeLine = sizeLine.substring(0, semi);
+      long chunkSize = strtol(sizeLine.c_str(), nullptr, 16);
+      if (chunkSize <= 0) break;
+      long remaining = chunkSize;
+      while (remaining > 0) {
+        if (client.available()) {
+          outBody += (char)client.read();
+          remaining--;
+        } else if (!client.connected()) {
+          break;
+        }
+      }
+      client.read(); // trailing \r
+      client.read(); // trailing \n
+    }
+  } else {
+    while (client.connected() || client.available()) {
+      while (client.available()) {
+        outBody += (char)client.read();
+      }
     }
   }
   client.stop();

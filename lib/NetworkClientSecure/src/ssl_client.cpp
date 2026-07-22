@@ -13,6 +13,9 @@
 #include <lwip/sys.h>
 #include <lwip/netdb.h>
 #include <mbedtls/oid.h>
+#if defined(MBEDTLS_DEBUG_C)
+#include <mbedtls/debug.h>
+#endif
 #include "mbedtls/version.h"
 #if MBEDTLS_VERSION_MAJOR >= 4
 #include <psa/crypto.h>
@@ -189,6 +192,20 @@ int start_ssl_client(
   if ((ret = mbedtls_ssl_config_defaults(&ssl_client->ssl_conf, MBEDTLS_SSL_IS_CLIENT, MBEDTLS_SSL_TRANSPORT_STREAM, MBEDTLS_SSL_PRESET_DEFAULT)) != 0) {
     return handle_error(ret);
   }
+
+#if defined(MBEDTLS_DEBUG_C)
+  // Only compiled in when the vendored mbedTLS build has debug support (see
+  // lib/mbedtls_esp32c3/, kanbus-3d5ae7). Level 1 = errors/warnings only,
+  // low-noise enough to leave on; bump to 4 for a full byte-level trace.
+  mbedtls_debug_set_threshold(1);
+  mbedtls_ssl_conf_dbg(
+    &ssl_client->ssl_conf,
+    [](void*, int level, const char* file, int line, const char* str) {
+      Serial.printf("MBEDTLS[%d] %s:%d %s", level, file, line, str);
+    },
+    nullptr
+  );
+#endif
 
 #if defined(MBEDTLS_SSL_ALPN)
   if (alpn_protos != NULL) {
