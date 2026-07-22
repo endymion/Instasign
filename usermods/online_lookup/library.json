@@ -13,6 +13,7 @@
   },
   "license": "MIT",
   "build": {
-    "libArchive": false
+    "libArchive": false,
+    "srcFilter": ["+<*.cpp>", "+<*.h>", "-<scripts>"]
   }
 }
